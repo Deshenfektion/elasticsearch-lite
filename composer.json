@@ -1,0 +1,46 @@
+{
+  "name": "deshenrao/elasticsearch-lite",
+  "description": "A small full-text search engine: inverted index, boolean query parser, TF-IDF and BM25 ranking, highlighting.",
+  "type": "project",
+  "license": "MIT",
+  "authors": [
+    {
+      "name": "Deshen Rao",
+      "email": "deyi.rao@gmx.de"
+    }
+  ],
+  "require": {
+    "php": ">=8.4",
+    "ext-dom": "*",
+    "ext-json": "*",
+    "ext-mbstring": "*",
+    "ext-pdo": "*"
+  },
+  "require-dev": {
+    "phpstan/phpstan": "^2.1",
+    "phpunit/phpunit": "^11.5"
+  },
+  "autoload": {
+    "psr-4": {
+      "EsLite\\": "src/"
+    }
+  },
+  "autoload-dev": {
+    "psr-4": {
+      "EsLite\\Tests\\": "tests/",
+      "EsLite\\Bench\\": "bench/src/"
+    }
+  },
+  "scripts": {
+    "test": "phpunit",
+    "test:unit": "phpunit --testsuite unit",
+    "test:feature": "phpunit --testsuite feature",
+    "analyse": "phpstan analyse",
+    "bench": "php bench/run.php"
+  },
+  "config": {
+    "sort-packages": true
+  },
+  "minimum-stability": "stable",
+  "prefer-stable": true
+}

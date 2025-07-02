@@ -1,0 +1,11 @@
+/vendor/
+/node_modules/
+/public/assets/
+/public/index.html
+/.phpunit.cache/
+/bench/out/
+/var/
+.env
+.DS_Store
+.idea/
+.vscode/

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace EsLite\Ranking;
 
+use EsLite\Exception\ConfigurationException;
 use EsLite\Support\Config;
 
 final readonly class RankingConfiguration
@@ -18,7 +19,7 @@ final readonly class RankingConfiguration
     public static function fromConfig(Config $config): self
     {
         return new self(
-            new TfIdfModel($config->bool('app.ranking.tfidf.length_normalisation', true)),
+            self::model($config),
             $config->float('app.ranking.phrase_boost', 2.0),
             $config->bool('app.ranking.coordination', true),
         );
@@ -26,7 +27,7 @@ final readonly class RankingConfiguration
 
     public static function default(): self
     {
-        return new self(new TfIdfModel());
+        return new self(new Bm25Model());
     }
 
     public function withModel(ScoringModel $model): self
@@ -42,5 +43,19 @@ final readonly class RankingConfiguration
             'phrase_boost' => $this->phraseBoost,
             'coordination' => $this->coordination,
         ];
+    }
+
+    private static function model(Config $config): ScoringModel
+    {
+        $name = strtolower($config->string('app.ranking.model', 'bm25'));
+
+        return match ($name) {
+            'bm25' => new Bm25Model(
+                $config->float('app.ranking.bm25.k1', 1.2),
+                $config->float('app.ranking.bm25.b', 0.75),
+            ),
+            'tfidf' => new TfIdfModel($config->bool('app.ranking.tfidf.length_normalisation', true)),
+            default => throw ConfigurationException::unknown('ranking model', $name, ['bm25', 'tfidf']),
+        };
     }
 }

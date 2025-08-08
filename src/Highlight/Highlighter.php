@@ -9,8 +9,11 @@ use EsLite\Search\PlannedQuery;
 
 final class Highlighter
 {
-    public function __construct(private readonly MatchLocator $locator)
-    {
+    public function __construct(
+        private readonly MatchLocator $locator,
+        private readonly PassageBuilder $builder = new PassageBuilder(),
+        private readonly PassageFormatter $formatter = new PassageFormatter(),
+    ) {
     }
 
     public function highlight(
@@ -28,10 +31,10 @@ final class Highlighter
                 continue;
             }
 
-            $fragment = $this->fragment($text, $planned, $options);
+            $fragments = $this->fragments($text, $planned, $options);
 
-            if ($fragment !== null) {
-                $highlights[$field] = [$fragment];
+            if ($fragments !== []) {
+                $highlights[$field] = $fragments;
             }
         }
 
@@ -39,68 +42,33 @@ final class Highlighter
             $body = $fields['body'] ?? '';
 
             if (trim($body) !== '') {
-                $highlights['body'] = [$this->excerpt($body, $options)];
+                $highlights['body'] = [$this->formatter->plain($body, $options->fragmentSize, $options)];
             }
         }
 
         return $highlights;
     }
 
-    private function fragment(string $text, PlannedQuery $planned, HighlightOptions $options): ?string
+    private function fragments(string $text, PlannedQuery $planned, HighlightOptions $options): array
     {
         $spans = $this->locator->locate($text, $planned->terms, $planned->phrases);
 
         if ($spans === []) {
-            return null;
+            return [];
         }
 
-        $length = strlen($text);
-        $start = max(0, $spans[0]->start - intdiv($options->fragmentSize, 3));
-        $end = min($length, $start + $options->fragmentSize);
-        $output = $start > 0 ? $options->ellipsis . ' ' : '';
-        $cursor = $start;
+        if (strlen($text) <= $options->fragmentSize) {
+            $passage = new Passage(0, strlen($text), $spans);
 
-        foreach ($spans as $span) {
-            if ($span->start < $cursor || $span->end > $end) {
-                continue;
-            }
-
-            $output .= $this->escape(substr($text, $cursor, $span->start - $cursor));
-            $output .= $options->preTag
-                . $this->escape(substr($text, $span->start, $span->end - $span->start))
-                . $options->postTag;
-            $cursor = $span->end;
+            return [$this->formatter->format($text, $passage, $options)];
         }
 
-        $output .= $this->escape(substr($text, $cursor, max(0, $end - $cursor)));
+        $fragments = [];
 
-        if ($end < $length) {
-            $output .= ' ' . $options->ellipsis;
+        foreach ($this->builder->build($text, $spans, $options) as $passage) {
+            $fragments[] = $this->formatter->format($text, $passage, $options);
         }
 
-        return trim((string) preg_replace('/\s+/u', ' ', $output));
-    }
-
-    private function excerpt(string $text, HighlightOptions $options): string
-    {
-        $excerpt = substr($text, 0, $options->fragmentSize);
-        $truncated = strlen($text) > $options->fragmentSize;
-
-        if ($truncated) {
-            $lastSpace = strrpos($excerpt, ' ');
-
-            if ($lastSpace !== false && $lastSpace > $options->fragmentSize / 2) {
-                $excerpt = substr($excerpt, 0, $lastSpace);
-            }
-        }
-
-        $formatted = trim((string) preg_replace('/\s+/u', ' ', $this->escape($excerpt)));
-
-        return $truncated ? $formatted . ' ' . $options->ellipsis : $formatted;
-    }
-
-    private function escape(string $text): string
-    {
-        return htmlspecialchars($text, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
+        return $fragments;
     }
 }

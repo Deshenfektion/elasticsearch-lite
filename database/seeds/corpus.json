@@ -1,0 +1,202 @@
+[
+  {
+    "id": "inverted-index-basics",
+    "media_type": "text/plain",
+    "title": "How an inverted index actually works",
+    "author": "Deshen Rao",
+    "category": "Information Retrieval",
+    "tags": ["inverted index", "postings", "internals"],
+    "published_at": "2025-07-04",
+    "content": "An inverted index maps every term to the list of documents that contain it. Building one is a two step process: analyse each document into tokens, then append a posting for every term occurrence. A posting records the document, the field, how often the term appears, and where it appears. Query time then never touches the documents themselves. Resolving a term is a single lookup in the term dictionary followed by a sequential scan of a sorted posting list. Because posting lists are sorted by document identifier, intersecting two of them costs a merge rather than a nested loop, which is the whole reason full text search feels instant."
+  },
+  {
+    "id": "tf-idf-explained",
+    "media_type": "text/plain",
+    "title": "TF-IDF, and why term frequency alone is not enough",
+    "author": "Deshen Rao",
+    "category": "Ranking",
+    "tags": ["tf-idf", "ranking", "scoring"],
+    "published_at": "2025-07-06",
+    "content": "Term frequency rewards documents that repeat a query term, but on its own it ranks a page that says database four hundred times above a page that explains databases well. Inverse document frequency fixes that by discounting terms that appear everywhere. A term found in nine of ten documents carries almost no signal; a term found in three documents out of ten thousand is worth a lot. Multiplying the two gives TF-IDF, the baseline every modern relevance model is compared against. The remaining problem is length: long documents accumulate term frequency for free, so any usable scoring function has to normalise by document length."
+  },
+  {
+    "id": "bm25-over-tfidf",
+    "media_type": "text/plain",
+    "title": "BM25 is TF-IDF with the sharp edges filed off",
+    "author": "Priya Raman",
+    "category": "Ranking",
+    "tags": ["bm25", "ranking", "probabilistic"],
+    "published_at": "2025-07-09",
+    "content": "BM25 keeps the shape of TF-IDF and fixes two problems. First, term frequency saturates: the tenth occurrence of a term adds far less than the second, controlled by the k1 parameter. Second, length normalisation becomes a dial rather than a fixed rule, controlled by b, so a collection of short product titles and a collection of long articles can be tuned differently. With k1 at 1.2 and b at 0.75 BM25 is a strong default that has survived twenty five years of benchmarks. It is still a bag of words model: it knows nothing about word order, which is why phrase queries need positional information."
+  },
+  {
+    "id": "tokenization-tradeoffs",
+    "media_type": "text/plain",
+    "title": "Tokenization decisions you cannot undo later",
+    "author": "Marta Kovac",
+    "category": "Text Analysis",
+    "tags": ["tokenizer", "analysis", "unicode"],
+    "published_at": "2025-07-12",
+    "content": "The tokenizer decides what can ever be searched. Split on whitespace and punctuation and a search for e-mail will not find email. Fold accents and Müller matches Muller, but a German corpus loses a real distinction. Remove stop words and index size drops noticeably, yet the phrase to be or not to be becomes unsearchable. None of these choices is correct in the abstract; each trades recall against precision and index size. What matters is that the same analysis chain runs over documents at index time and over the query at search time, because a query term that was stemmed differently than the document term simply will not match."
+  },
+  {
+    "id": "porter-stemmer-notes",
+    "media_type": "text/plain",
+    "title": "Notes on implementing the Porter stemmer",
+    "author": "Marta Kovac",
+    "category": "Text Analysis",
+    "tags": ["stemming", "porter", "algorithms"],
+    "published_at": "2025-07-15",
+    "content": "The Porter stemmer is a sequence of suffix rewriting rules gated by a measure of vowel consonant sequences. It is not a linguistic analyser and it does not try to be: running is reduced to run, but ran stays ran, and university and universe collapse onto the same stem. Those errors are acceptable because both indexing and querying make the same mistake consistently. Implementations are famously easy to get subtly wrong. Rule order matters, longer suffixes must be tested before shorter ones that they contain, and the measure calculation has to treat y as a consonant only when it follows a vowel."
+  },
+  {
+    "id": "boolean-query-parsing",
+    "media_type": "text/plain",
+    "title": "Parsing a boolean query language",
+    "author": "Deshen Rao",
+    "category": "Query Parsing",
+    "tags": ["parser", "boolean", "recursive descent"],
+    "published_at": "2025-07-18",
+    "content": "A search box that only accepts single words wastes the index. A small boolean language costs a lexer and a recursive descent parser and gives users real control: quoted phrases, required and prohibited terms, field restrictions, grouping with parentheses, and prefix wildcards. The grammar is small enough to fit on one page and the parser produces an abstract syntax tree of term, phrase, prefix and boolean nodes. Keeping parsing separate from execution matters. The parser knows nothing about the index, and the planner that rewrites the tree into scorers knows nothing about syntax, so both can be tested in isolation."
+  },
+  {
+    "id": "phrase-queries-positions",
+    "media_type": "text/plain",
+    "title": "Phrase queries need positions, and positions are not free",
+    "author": "Ana Silva",
+    "category": "Information Retrieval",
+    "tags": ["phrase", "positions", "postings"],
+    "published_at": "2025-07-21",
+    "content": "To answer a phrase query you need to know where each term sits inside each field, not just that it occurs. Storing positions inflates the index substantially, often doubling it, so they earn their keep only if phrase search matters. The usual encoding is delta gaps plus variable byte integers: positions are sorted, so store the differences, and most differences are small enough to fit in a single byte. Matching then intersects position lists looking for consecutive offsets. If stop words were removed, holes remain in the position sequence, and the query has to preserve the same holes or the phrase will never line up."
+  },
+  {
+    "id": "skip-lists-and-advance",
+    "media_type": "text/plain",
+    "title": "Why posting lists want galloping search",
+    "author": "Ana Silva",
+    "category": "Performance",
+    "tags": ["skip list", "intersection", "performance"],
+    "published_at": "2025-07-24",
+    "content": "Intersecting a rare term with a common one is where naive engines fall over. If one posting list has twelve entries and the other has four hundred thousand, walking both linearly does four hundred thousand steps for twelve results. The fix is to drive the intersection from the cheapest list and to let the expensive list skip ahead. Galloping search doubles the step size until it overshoots the target, then binary searches the bracket, which finds the next candidate in logarithmic time. Lucene stores explicit skip lists on disk for the same purpose; an in memory list can gallop over the array directly."
+  },
+  {
+    "id": "highlighting-snippets",
+    "media_type": "text/html",
+    "title": "Building a highlighter that does not re-render the document",
+    "author": "Jonas Weber",
+    "category": "Highlighting",
+    "tags": ["highlighting", "snippets", "ui"],
+    "published_at": "2025-07-27",
+    "content": "<html><head><title>Building a highlighter that does not re-render the document</title><meta name=\"author\" content=\"Jonas Weber\"><meta name=\"keywords\" content=\"highlighting, snippets, ui\"></head><body><h1>Building a highlighter that does not re-render the document</h1><p>A highlighter has two jobs: find every match in the stored text, and pick the small windows worth showing. Finding matches means running the same analysis chain over the field again, this time keeping character offsets so the original spelling can be shown rather than the stem.</p><p>Choosing windows is a ranking problem of its own. A passage that contains three different query terms is more useful than one that repeats a single term three times, so passages get scored by distinct terms first, total matches second, and position in the document as a tie breaker.</p><p>Rendering the whole document with tags around every hit is the mistake to avoid. It ships megabytes to the browser and buries the answer.</p></body></html>"
+  },
+  {
+    "id": "search-api-design",
+    "media_type": "application/json",
+    "title": "Designing a small search API",
+    "author": "Jonas Weber",
+    "category": "API Design",
+    "tags": ["rest", "api", "pagination"],
+    "published_at": "2025-07-30",
+    "content": "{\"title\": \"Designing a small search API\", \"author\": \"Jonas Weber\", \"category\": \"API Design\", \"tags\": [\"rest\", \"api\", \"pagination\"], \"body\": \"A search endpoint has more edge cases than it first appears. Paging needs a hard upper bound on page size or a single request can ask the engine to score and hydrate every document in the collection. Filters have to compose with the full text query rather than replace it, so a category filter narrows the candidate set while relevance still decides the order. Timing belongs in the response: a took field in milliseconds turns vague complaints about slowness into a measurement. Errors deserve the same care as results, with a stable type field that clients can branch on and a message a human can act on.\"}"
+  },
+  {
+    "id": "filters-vs-queries",
+    "media_type": "text/plain",
+    "title": "Filters and queries answer different questions",
+    "author": "Priya Raman",
+    "category": "Information Retrieval",
+    "tags": ["filters", "facets", "query"],
+    "published_at": "2025-08-01",
+    "content": "A query asks how well a document matches; a filter asks whether it qualifies at all. Confusing the two produces strange results, such as a recent date pushing an irrelevant document to the top. Filters are boolean, cacheable and cheap: they reduce the candidate set and contribute nothing to the score. In a relational backing store a filter compiles to a where clause over structured columns, which the database can answer with an index, and the resulting document identifiers become a set that the scorer skips through. Facet counts fall out of the same set almost for free, which is what makes a filter sidebar feel responsive."
+  },
+  {
+    "id": "index-updates-deletes",
+    "media_type": "text/plain",
+    "title": "Updates and deletes in an inverted index",
+    "author": "Deshen Rao",
+    "category": "Indexing",
+    "tags": ["updates", "deletes", "consistency"],
+    "published_at": "2025-08-04",
+    "content": "Inverted indexes are shaped for reading, which makes updates awkward. Changing one word in a document means touching every posting list that mentions any of its terms. Lucene sidesteps the problem with immutable segments and deletion markers, merging in the background. A smaller engine can afford the direct approach: delete the document postings, recompute them, and adjust the document and total frequency counters for every affected term in the same transaction. The counters are the part people forget. A stale document frequency quietly corrupts every score in the collection, and nothing in the results looks obviously wrong until you compare against a rebuild."
+  },
+  {
+    "id": "caching-search-results",
+    "media_type": "text/plain",
+    "title": "What is actually worth caching in a search engine",
+    "author": "Ana Silva",
+    "category": "Performance",
+    "tags": ["caching", "performance", "latency"],
+    "published_at": "2025-08-07",
+    "content": "Three layers can be cached and they pay off very differently. The term dictionary is small, hot and almost never changes, so caching term metadata removes a round trip from every clause of every query. Posting lists are large and only worth keeping for genuinely frequent terms, since a naive cache will evict itself. Whole result sets are the cheapest win for a public search box because query distributions are heavily skewed, but they need a short time to live or an explicit invalidation hook, otherwise a freshly indexed document appears to be missing. Measure the hit ratio before believing any of it."
+  },
+  {
+    "id": "field-weighting",
+    "media_type": "text/plain",
+    "title": "Field weighting: a title match is not a body match",
+    "author": "Priya Raman",
+    "category": "Ranking",
+    "tags": ["field boost", "ranking", "relevance"],
+    "published_at": "2025-08-09",
+    "content": "Treating every field the same throws away the strongest signal in most collections. A term in the title usually says what a document is about, while the same term buried in the body may be an aside. Storing postings per field lets the scorer weight them independently, so a title hit can be worth three body hits. Boosts interact with length normalisation in ways that surprise people: titles are short, so their normalised term frequency is already high, and a large boost on top of that can drown out genuine content matches. Tune boosts against a small set of judged queries, not by intuition."
+  },
+  {
+    "id": "prefix-and-wildcard",
+    "media_type": "text/plain",
+    "title": "Prefix and wildcard queries, and the term explosion problem",
+    "author": "Marta Kovac",
+    "category": "Query Parsing",
+    "tags": ["prefix", "wildcard", "suggestions"],
+    "published_at": "2025-08-11",
+    "content": "A prefix query is not one query, it is a disjunction over every term in the dictionary that starts with the prefix. Because the dictionary is sorted, finding the range is a bounded scan, but the expansion has to be capped: searching for the single letter a would otherwise pull in tens of thousands of terms and turn one lookup into a linear scan of the whole index. Wildcards in the middle of a term are worse, since no range restriction applies unless a literal prefix exists. Constant scoring the expanded clauses keeps the results sane, because term frequency across arbitrary expansions is meaningless."
+  },
+  {
+    "id": "benchmarking-search",
+    "media_type": "text/plain",
+    "title": "Benchmarking search honestly",
+    "author": "Jonas Weber",
+    "category": "Performance",
+    "tags": ["benchmark", "percentiles", "methodology"],
+    "published_at": "2025-08-14",
+    "content": "Averages hide everything interesting about search latency. Report percentiles, and report them per query shape, because a single term lookup and a four term phrase query have nothing in common. State the corpus size, the hardware, whether caches were warm, and whether the database sat on the same machine. A benchmark that measures a warm result cache measures the cache, not the engine. The useful numbers are unglamorous: how latency grows as the collection grows, how much of a query is spent in the database versus in scoring, and how far the ninety ninth percentile sits from the median."
+  },
+  {
+    "id": "relational-storage-for-postings",
+    "media_type": "text/plain",
+    "title": "Storing an inverted index in a relational database",
+    "author": "Deshen Rao",
+    "category": "Indexing",
+    "tags": ["mysql", "storage", "schema"],
+    "published_at": "2025-08-16",
+    "content": "A relational database is not the obvious home for postings, but it makes the trade offs explicit. A row per term, field and document with the primary key ordered term first gives sorted access per term, which is exactly what a merge join over posting lists wants. Positions go into a blob rather than a row per position, because a row per position multiplies the table size by ten or more and buys nothing. Field length is denormalised into the posting row so scoring never needs a second lookup. What you give up is control over the on disk layout, and with it the compression a purpose built codec would deliver."
+  },
+  {
+    "id": "search-suggestions",
+    "media_type": "text/plain",
+    "title": "Suggestions from the dictionary and from the logs",
+    "author": "Ana Silva",
+    "category": "API Design",
+    "tags": ["suggest", "autocomplete", "logs"],
+    "published_at": "2025-08-18",
+    "content": "Autocomplete has two useful sources. The term dictionary can complete the word being typed, ordered by document frequency so common terms come first, which guarantees that every suggestion leads to results. Query logs can complete the whole intent, and because popular queries are usually good queries they often beat dictionary completions for head traffic. Neither works well alone: logs are empty on day one and biased afterwards, while dictionary completions cannot know that people who type stem usually mean stemming. Both need a minimum prefix length, or every keystroke turns into a scan."
+  },
+  {
+    "id": "score-explanations",
+    "media_type": "text/plain",
+    "title": "Explain output is a debugging tool for relevance",
+    "author": "Priya Raman",
+    "category": "Ranking",
+    "tags": ["explain", "debugging", "relevance"],
+    "published_at": "2025-08-20",
+    "content": "When a search result looks wrong the only honest answer is a breakdown of the score. An explanation tree shows each clause, the inverse document frequency it contributed, the term frequency and field length behind it, and the boost applied. Nine times out of ten the surprise is mundane: a stop word silently dropped, a stemmer collapsing two different words, or a field boost fighting length normalisation. Building the explanation as a separate pass over the same scorer tree keeps it out of the hot path, so it costs nothing until someone asks for it, and it doubles as a test fixture for the scoring model."
+  },
+  {
+    "id": "search-ui-latency",
+    "media_type": "text/html",
+    "title": "Instant search is a latency budget, not a feature",
+    "author": "Jonas Weber",
+    "category": "Highlighting",
+    "tags": ["ui", "instant search", "latency"],
+    "published_at": "2025-08-22",
+    "content": "<html><head><title>Instant search is a latency budget, not a feature</title><meta name=\"author\" content=\"Jonas Weber\"><meta name=\"keywords\" content=\"ui, instant search, latency\"></head><body><h1>Instant search is a latency budget, not a feature</h1><p>Search as you type turns every keystroke into a request, so the interesting number is not the average response time but how many requests never needed to exist. Debouncing keystrokes, cancelling superseded requests and refusing to query below a minimum prefix length remove most of the load before it reaches the engine.</p><p>The rest is perceived latency. Keeping the previous results on screen while the next set loads, rather than clearing to a spinner, makes an eighty millisecond response feel immediate, and highlighting the matched terms tells the user why a result is there without another round trip.</p></body></html>"
+  }
+]

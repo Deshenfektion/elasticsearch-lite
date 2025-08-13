@@ -1,0 +1,20 @@
+#!/usr/bin/env php
+<?php
+
+declare(strict_types=1);
+
+use EsLite\Application;
+use EsLite\Console\Console;
+use EsLite\Console\Output;
+
+require dirname(__DIR__) . '/vendor/autoload.php';
+
+$output = new Output(stream_isatty(STDOUT));
+
+try {
+    $console = new Console(Application::boot(dirname(__DIR__)), $output);
+    exit($console->run($argv));
+} catch (Throwable $exception) {
+    $output->error($exception->getMessage());
+    exit(1);
+}

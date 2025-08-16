@@ -92,6 +92,7 @@ final class IndexWriter
             $this->terms->truncate();
             $this->documentFields->truncate();
             $this->state->reset();
+            $this->state->apply([IndexStateRepository::DOCUMENT_COUNT => $this->documents->count()]);
         });
 
         $this->cache->flush();

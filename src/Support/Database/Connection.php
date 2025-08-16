@@ -153,12 +153,26 @@ final class Connection
 
         try {
             $statement->closeCursor();
-            $statement->execute($this->normaliseBindings($bindings));
+
+            foreach ($this->normaliseBindings($bindings) as $parameter => $value) {
+                $statement->bindValue($parameter, $value, $this->parameterType($value));
+            }
+
+            $statement->execute();
         } catch (PDOException $exception) {
             throw StorageException::queryFailed($sql, $exception);
         }
 
         return $statement;
+    }
+
+    private function parameterType(mixed $value): int
+    {
+        return match (true) {
+            $value === null => PDO::PARAM_NULL,
+            is_int($value) => PDO::PARAM_INT,
+            default => PDO::PARAM_STR,
+        };
     }
 
     private function prepare(string $sql): PDOStatement
@@ -181,13 +195,7 @@ final class Connection
                 default => $value,
             };
 
-            if (is_int($key)) {
-                $normalised[] = $value;
-
-                continue;
-            }
-
-            $normalised[$key] = $value;
+            $normalised[is_int($key) ? $key + 1 : $key] = $value;
         }
 
         return $normalised;

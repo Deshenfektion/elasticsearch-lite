@@ -1,0 +1,82 @@
+@use 'variables' as *;
+
+.search-bar {
+  position: relative;
+  display: flex;
+  flex: 1 1 420px;
+  gap: 8px;
+
+  &__input {
+    flex: 1;
+    min-width: 0;
+    padding: 10px 14px;
+    border: 1px solid $line;
+    border-radius: $radius;
+    background: $paper-shade;
+    font-size: 15px;
+    transition:
+      border-color 0.15s ease,
+      background 0.15s ease;
+
+    &::placeholder {
+      color: $ink-faint;
+    }
+
+    &:focus {
+      border-color: $accent;
+      background: $paper;
+      outline: none;
+    }
+  }
+
+  &__submit {
+    padding: 10px 18px;
+    border: 1px solid transparent;
+    border-radius: $radius;
+    background: $accent;
+    color: #fff;
+    font-weight: 550;
+
+    &:hover {
+      background: $accent-strong;
+    }
+  }
+}
+
+.suggestions {
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 0;
+  right: 0;
+  z-index: 30;
+  overflow: hidden;
+  border: 1px solid $line;
+  border-radius: $radius;
+  background: $paper;
+  box-shadow: $shadow-raised;
+
+  &__item {
+    display: flex;
+    gap: 12px;
+    align-items: baseline;
+    justify-content: space-between;
+    padding: 9px 14px;
+    cursor: pointer;
+
+    &:hover,
+    &--active {
+      background: $accent-soft;
+    }
+  }
+
+  &__term {
+    font-family: $font-mono;
+    font-size: 13px;
+  }
+
+  &__count {
+    color: $ink-faint;
+    font-size: 12px;
+    white-space: nowrap;
+  }
+}

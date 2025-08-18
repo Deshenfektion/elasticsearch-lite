@@ -1,0 +1,81 @@
+@use 'variables' as *;
+
+.masthead {
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  background: $paper;
+  border-bottom: 1px solid $line;
+  box-shadow: $shadow-soft;
+
+  &__inner {
+    display: flex;
+    gap: 20px;
+    align-items: center;
+    max-width: $content-width;
+    margin: 0 auto;
+    padding: 14px 24px;
+  }
+
+  &__brand {
+    flex-shrink: 0;
+    color: $ink;
+    font-size: 16px;
+    font-weight: 650;
+    letter-spacing: -0.01em;
+
+    span {
+      color: $ink-faint;
+      font-weight: 500;
+    }
+
+    &:hover {
+      text-decoration: none;
+    }
+  }
+
+  &__link {
+    flex-shrink: 0;
+    color: $ink-soft;
+    font-size: 13px;
+  }
+}
+
+.layout {
+  display: grid;
+  grid-template-columns: $sidebar-width minmax(0, 1fr);
+  gap: 28px;
+  max-width: $content-width;
+  margin: 0 auto;
+  padding: 26px 24px 80px;
+
+  &__sidebar {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  &__results {
+    min-width: 0;
+  }
+}
+
+@media (max-width: $breakpoint-wide) {
+  .layout {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .masthead__inner {
+    flex-wrap: wrap;
+  }
+}
+
+@media (max-width: $breakpoint-narrow) {
+  .layout {
+    padding: 18px 14px 60px;
+  }
+
+  .masthead__inner {
+    padding: 12px 14px;
+  }
+}

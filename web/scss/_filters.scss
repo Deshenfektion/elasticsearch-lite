@@ -1,0 +1,147 @@
+@use 'variables' as *;
+
+.panel {
+  padding: 16px;
+  border: 1px solid $line;
+  border-radius: $radius;
+  background: $paper;
+  box-shadow: $shadow-soft;
+
+  &--muted {
+    background: $paper;
+    color: $ink-soft;
+  }
+
+  &__header {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    margin-bottom: 12px;
+  }
+
+  &__title {
+    font-size: 14px;
+    font-weight: 650;
+    letter-spacing: 0.01em;
+  }
+
+  &__clear {
+    border: none;
+    background: none;
+    color: $accent;
+    font-size: 12px;
+    padding: 0;
+  }
+
+  &__group + &__group {
+    margin-top: 18px;
+  }
+
+  &__heading {
+    margin-bottom: 7px;
+    color: $ink-faint;
+    font-size: 11px;
+    font-weight: 650;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+  }
+
+  &__note {
+    margin-top: 14px;
+    color: $ink-faint;
+    font-size: 11px;
+  }
+}
+
+.facets {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.facet {
+  &__label {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    padding: 3px 4px;
+    border-radius: $radius-small;
+    cursor: pointer;
+    font-size: 13px;
+
+    &:hover {
+      background: $paper-shade;
+    }
+
+    &--active {
+      color: $accent;
+      font-weight: 550;
+    }
+  }
+
+  &__name {
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  &__count {
+    color: $ink-faint;
+    font-family: $font-mono;
+    font-size: 11px;
+  }
+}
+
+.date-range {
+  display: flex;
+  gap: 8px;
+
+  input {
+    flex: 1;
+    min-width: 0;
+    padding: 6px 8px;
+    border: 1px solid $line;
+    border-radius: $radius-small;
+    background: $paper;
+    font-size: 12px;
+  }
+}
+
+.select {
+  width: 100%;
+  padding: 7px 8px;
+  border: 1px solid $line;
+  border-radius: $radius-small;
+  background: $paper;
+  font-size: 13px;
+}
+
+.toggle {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  margin-top: 10px;
+  color: $ink-soft;
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.stats {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 4px 12px;
+  margin-top: 12px;
+  font-size: 13px;
+
+  dt {
+    color: $ink-faint;
+  }
+
+  dd {
+    margin: 0;
+    font-family: $font-mono;
+    text-align: right;
+  }
+}

@@ -1,0 +1,46 @@
+@use 'variables' as *;
+
+.pagination {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  align-items: center;
+  justify-content: center;
+  margin-top: 22px;
+
+  &__page,
+  &__step {
+    min-width: 34px;
+    padding: 6px 10px;
+    border: 1px solid $line;
+    border-radius: $radius-small;
+    background: $paper;
+    color: $ink-soft;
+    font-size: 13px;
+
+    &:hover:not(:disabled) {
+      border-color: $accent;
+      color: $accent;
+    }
+
+    &:disabled {
+      opacity: 0.45;
+      cursor: default;
+    }
+  }
+
+  &__page--active {
+    border-color: $accent;
+    background: $accent;
+    color: #fff;
+
+    &:hover {
+      color: #fff;
+    }
+  }
+
+  &__gap {
+    color: $ink-faint;
+    padding: 0 2px;
+  }
+}

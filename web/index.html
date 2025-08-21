@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>elasticsearch-lite</title>
+    <link rel="stylesheet" href="/assets/app.css" />
+  </head>
+  <body>
+    <header class="masthead">
+      <div class="masthead__inner">
+        <a class="masthead__brand" href="/">elasticsearch<span>-lite</span></a>
+        <form class="search-bar" id="search-form" role="search" autocomplete="off">
+          <input
+            class="search-bar__input"
+            id="search-input"
+            type="search"
+            name="q"
+            placeholder='Search the corpus — try  inverted index,  title:bm25,  "posting list",  rank*'
+            aria-label="Search query"
+            aria-controls="suggestions"
+            aria-expanded="false"
+          />
+          <button class="search-bar__submit" type="submit">Search</button>
+          <ul class="suggestions" id="suggestions" role="listbox" hidden></ul>
+        </form>
+        <a
+          class="masthead__link"
+          href="https://github.com/deshenrao/elasticsearch-lite"
+          rel="noreferrer noopener"
+          target="_blank"
+          >Source</a
+        >
+      </div>
+    </header>
+
+    <main class="layout">
+      <aside class="layout__sidebar">
+        <section class="panel" id="filters"></section>
+        <section class="panel panel--muted" id="index-stats"></section>
+      </aside>
+
+      <section class="layout__results">
+        <div class="result-meta" id="result-meta"></div>
+        <div class="results" id="results"></div>
+        <nav class="pagination" id="pagination" aria-label="Result pages"></nav>
+      </section>
+    </main>
+
+    <script type="module" src="/assets/js/main.js"></script>
+  </body>
+</html>

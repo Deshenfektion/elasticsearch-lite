@@ -1,0 +1,13 @@
+.git/
+.github/
+node_modules/
+vendor/
+var/
+bench/out/
+public/assets/
+public/index.html
+docs/
+.phpunit.cache/
+tests/
+.env
+*.md

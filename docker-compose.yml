@@ -1,0 +1,63 @@
+services:
+  mysql:
+    image: mysql:8.4
+    command: --mysql-native-password=ON
+    environment:
+      MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD:-root}
+      MYSQL_DATABASE: ${DB_DATABASE:-eslite}
+      MYSQL_USER: ${DB_USERNAME:-eslite}
+      MYSQL_PASSWORD: ${DB_PASSWORD:-eslite}
+    volumes:
+      - mysql-data:/var/lib/mysql
+      - ./docker/mysql/tuning.cnf:/etc/mysql/conf.d/tuning.cnf:ro
+    healthcheck:
+      test: ['CMD', 'mysqladmin', 'ping', '-h', '127.0.0.1', '-p${DB_ROOT_PASSWORD:-root}']
+      interval: 5s
+      timeout: 5s
+      retries: 20
+      start_period: 20s
+
+  php:
+    build:
+      context: .
+      dockerfile: docker/php/Dockerfile
+    environment:
+      ES_LITE_ENV: ${ES_LITE_ENV:-local}
+      DB_DRIVER: mysql
+      DB_HOST: mysql
+      DB_PORT: '3306'
+      DB_DATABASE: ${DB_DATABASE:-eslite}
+      DB_USERNAME: ${DB_USERNAME:-eslite}
+      DB_PASSWORD: ${DB_PASSWORD:-eslite}
+      RANKING_MODEL: ${RANKING_MODEL:-bm25}
+      SEED_ON_BOOT: ${SEED_ON_BOOT:-true}
+    volumes:
+      - public-assets:/app/public
+    depends_on:
+      mysql:
+        condition: service_healthy
+    healthcheck:
+      test: ['CMD', 'php', 'bin/console', 'health']
+      interval: 15s
+      timeout: 10s
+      retries: 5
+      start_period: 30s
+
+  nginx:
+    image: nginx:1.27-alpine
+    ports:
+      - '${HTTP_PORT:-8080}:80'
+    volumes:
+      - ./docker/nginx/default.conf:/etc/nginx/conf.d/default.conf:ro
+      - public-assets:/app/public:ro
+    depends_on:
+      - php
+    healthcheck:
+      test: ['CMD', 'wget', '--spider', '-q', 'http://localhost/api/health']
+      interval: 15s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  mysql-data:
+  public-assets:

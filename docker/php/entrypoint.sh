@@ -17,7 +17,7 @@ fi
 php bin/console migrate
 
 if [ "${SEED_ON_BOOT:-true}" = "true" ]; then
-  php bin/console seed
+  php bin/console seed || echo "seeding failed, continuing without the demo corpus" >&2
 fi
 
 exec "$@"

@@ -2,7 +2,7 @@ COMPOSE ?= docker compose
 CONTAINER ?= $(COMPOSE) exec -T php php
 PHP ?= php
 
-.PHONY: help up down logs build seed reindex migrate search stats test lint format
+.PHONY: help up down logs build seed reindex migrate search stats test analyse lint format bench
 
 help: ## Show available targets
 	@grep -E '^[a-z-]+:.*?##' $(MAKEFILE_LIST) | sed 's/:.*##/\t/' | expand -t22
@@ -37,8 +37,14 @@ stats: ## Print index statistics
 test: ## Run the PHPUnit suites (needs PHP 8.4 and vendor/ locally)
 	$(PHP) vendor/bin/phpunit
 
+analyse: ## Run static analysis
+	$(PHP) vendor/bin/phpstan analyse
+
 lint: ## Lint the frontend
 	npm run lint && npm run format:check
 
 format: ## Format everything Prettier owns
 	npm run format
+
+bench: ## Run the benchmark suite (BENCH_DOCS controls corpus size)
+	$(PHP) bench/run.php

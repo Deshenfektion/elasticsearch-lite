@@ -17,6 +17,10 @@ final class TermScorer implements Scorer
 
     private readonly float $idf;
 
+    private readonly array $averageLengths;
+
+    private readonly array $boosts;
+
     public function __construct(
         private readonly PostingList $postings,
         private readonly ScoringModel $model,
@@ -27,6 +31,17 @@ final class TermScorer implements Scorer
     ) {
         $this->iterator = $this->postings->iterator($this->fieldId);
         $this->idf = $this->model->idf($this->postings->documentFrequency, $this->statistics->documentCount);
+
+        $averageLengths = [];
+        $boosts = [];
+
+        foreach ($this->fields->ids() as $fieldId) {
+            $averageLengths[$fieldId] = $this->statistics->averageFieldLength($fieldId);
+            $boosts[$fieldId] = $this->fields->boostById($fieldId);
+        }
+
+        $this->averageLengths = $averageLengths;
+        $this->boosts = $boosts;
     }
 
     public function term(): string
@@ -119,8 +134,8 @@ final class TermScorer implements Scorer
                 $this->idf,
                 $posting->termFrequency,
                 $posting->fieldLength,
-                $this->statistics->averageFieldLength($posting->fieldId),
-            ) * $this->fields->boostById($posting->fieldId);
+                $this->averageLengths[$posting->fieldId] ?? 0.0,
+            ) * ($this->boosts[$posting->fieldId] ?? 1.0);
         }
 
         return $score * $this->boost;

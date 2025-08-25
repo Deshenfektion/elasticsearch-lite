@@ -33,19 +33,29 @@ final class PostingIterator implements DocIdIterator
 
     public function advance(int $target): int
     {
-        if ($this->size === 0) {
+        if ($this->size === 0 || $this->cursor >= $this->size) {
             $this->cursor = $this->size;
 
             return self::NO_MORE_DOCS;
         }
 
-        if ($this->cursor < 0) {
-            $this->cursor = 0;
+        $low = max($this->cursor, 0);
+
+        if ($this->docIds[$low] >= $target && $this->cursor >= 0) {
+            return $this->docIds[$low];
         }
 
-        while ($this->cursor < $this->size && $this->docIds[$this->cursor] < $target) {
-            $this->cursor++;
+        $step = 1;
+        $high = $low;
+
+        while ($high < $this->size && $this->docIds[$high] < $target) {
+            $low = $high;
+            $high += $step;
+            $step <<= 1;
         }
+
+        $high = min($high, $this->size - 1);
+        $this->cursor = $this->binarySearch($low, $high, $target);
 
         return $this->docId();
     }
@@ -58,5 +68,20 @@ final class PostingIterator implements DocIdIterator
     public function reset(): void
     {
         $this->cursor = -1;
+    }
+
+    private function binarySearch(int $low, int $high, int $target): int
+    {
+        while ($low <= $high) {
+            $middle = $low + intdiv($high - $low, 2);
+
+            if ($this->docIds[$middle] < $target) {
+                $low = $middle + 1;
+            } else {
+                $high = $middle - 1;
+            }
+        }
+
+        return $low;
     }
 }

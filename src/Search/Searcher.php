@@ -29,17 +29,24 @@ final class Searcher
         return $this->planner->plan($query);
     }
 
-    public function search(PlannedQuery $planned, ?DocumentSet $filter, int $from, int $size): TopDocs
-    {
+    public function search(
+        PlannedQuery $planned,
+        ?DocumentSet $filter,
+        int $from,
+        int $size,
+        bool $collectMatches = true,
+    ): TopDocs {
         $scorer = $this->scorer($planned, $filter);
         $collector = new TopScoreCollector(max($from + $size, 1));
         $matchedIds = [];
+        $collected = 0;
 
         while (($documentId = $scorer->next()) !== DocIdIterator::NO_MORE_DOCS) {
             $collector->collect($documentId, $scorer->score());
 
-            if (count($matchedIds) < self::MAX_MATCHED_IDS) {
+            if ($collectMatches && $collected < self::MAX_MATCHED_IDS) {
                 $matchedIds[] = $documentId;
+                $collected++;
             }
         }
 

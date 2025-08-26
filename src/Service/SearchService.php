@@ -91,7 +91,7 @@ final class SearchService
     private function execute(PlannedQuery $planned, ?DocumentSet $filter, SearchRequest $request): TopDocs
     {
         if ($request->sort === SortOrder::Relevance) {
-            return $this->searcher->search($planned, $filter, $request->from, $request->size);
+            return $this->searcher->search($planned, $filter, $request->from, $request->size, $request->facets);
         }
 
         $unsorted = $this->searcher->search($planned, $filter, 0, 0);

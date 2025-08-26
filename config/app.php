@@ -52,6 +52,7 @@ return [
         'max_expansions' => Env::get('SEARCH_MAX_EXPANSIONS', 64),
         'log_queries' => Env::get('SEARCH_LOG_QUERIES', true),
         'cache' => [
+            'shared' => Env::get('SHARED_CACHE', true),
             'terms' => 8192,
             'postings' => 512,
             'results' => [

@@ -47,8 +47,7 @@ use EsLite\Service\SearchService;
 use EsLite\Service\StatisticsService;
 use EsLite\Service\SuggestService;
 use EsLite\Support\Cache\Cache;
-use EsLite\Support\Cache\LruCache;
-use EsLite\Support\Cache\NullCache;
+use EsLite\Support\Cache\CacheFactory;
 use EsLite\Support\Clock;
 use EsLite\Support\Config;
 use EsLite\Support\Database\Connection;
@@ -270,16 +269,14 @@ final class Application
 
     public function resultCache(): Cache
     {
-        return $this->service(Cache::class, function (): Cache {
-            if (!$this->config->bool('app.search.cache.results.enabled', true)) {
-                return new NullCache();
-            }
-
-            return new LruCache(
-                $this->config->int('app.search.cache.results.entries', 256),
-                $this->config->int('app.search.cache.results.ttl', 30),
-            );
-        });
+        return $this->service(Cache::class, fn (): Cache => CacheFactory::make(
+            'results',
+            $this->config->bool('app.search.cache.results.enabled', true)
+                ? $this->config->int('app.search.cache.results.entries', 256)
+                : 0,
+            $this->config->int('app.search.cache.results.ttl', 30),
+            $this->config->bool('app.search.cache.shared', true),
+        ));
     }
 
     public function indexingService(): IndexingService

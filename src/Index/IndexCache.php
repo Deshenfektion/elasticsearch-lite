@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace EsLite\Index;
 
 use EsLite\Support\Cache\Cache;
-use EsLite\Support\Cache\LruCache;
+use EsLite\Support\Cache\CacheFactory;
 use EsLite\Support\Config;
 
 final class IndexCache
@@ -19,8 +19,13 @@ final class IndexCache
     public static function fromConfig(Config $config): self
     {
         return new self(
-            new LruCache($config->int('app.search.cache.terms', 8192)),
-            new LruCache($config->int('app.search.cache.postings', 512)),
+            CacheFactory::make(
+                'terms',
+                $config->int('app.search.cache.terms', 8192),
+                0,
+                $config->bool('app.search.cache.shared', true),
+            ),
+            CacheFactory::make('postings', $config->int('app.search.cache.postings', 512)),
         );
     }
 

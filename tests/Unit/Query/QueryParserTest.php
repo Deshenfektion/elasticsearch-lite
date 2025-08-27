@@ -131,6 +131,20 @@ final class QueryParserTest extends TestCase
         }
     }
 
+    public function testAppliesFieldToPhrasesAndPrefixesInsideAGroup(): void
+    {
+        $query = $this->parser->parse('title:("posting list" OR rank* OR st?m)');
+
+        self::assertInstanceOf(BooleanQuery::class, $query);
+        self::assertInstanceOf(PhraseQuery::class, $query->clauses[0]->query);
+        self::assertInstanceOf(PrefixQuery::class, $query->clauses[1]->query);
+        self::assertInstanceOf(WildcardQuery::class, $query->clauses[2]->query);
+
+        foreach ($query->clauses as $clause) {
+            self::assertSame('title', $clause->query->field());
+        }
+    }
+
     public function testParsesPrefixQuery(): void
     {
         $query = $this->parser->parse('rank*');

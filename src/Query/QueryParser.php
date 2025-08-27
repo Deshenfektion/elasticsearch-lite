@@ -203,7 +203,7 @@ final class QueryParser
     {
         return match (true) {
             $query instanceof TermQuery => new TermQuery($query->term, $field, $query->boost),
-            $query instanceof PhraseQuery => new PhraseQuery($query->terms, $field, $query->slop, $query->boost),
+            $query instanceof PhraseQuery => new PhraseQuery($query->terms, $field, $query->offsets, $query->boost),
             $query instanceof PrefixQuery => new PrefixQuery($query->prefix, $field, $query->boost),
             $query instanceof WildcardQuery => new WildcardQuery($query->pattern, $field, $query->boost),
             $query instanceof BooleanQuery => $query->withClauses(array_map(
